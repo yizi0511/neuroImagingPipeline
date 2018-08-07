@@ -1,8 +1,16 @@
-'''
-Custom eddy_correct cmd line interface 
-'''
+"""
+=============================================
+Custom cmd line interface for eddy correction
+=============================================
 
-# Import nipype interfaces 
+The desired cmd line output:
+
+eddy_correct /share/foxlab-backedup/necfdg/mri/ds_2017-09-26_09-00/dti_005_dwi_FH_1shell_b1200.nii /share/foxlab-backedup/necfdg/mri/ds_2017-09-26_09-00/dti_005_dwi_FH_1shell_b1200_eddy.nii 0
+"""
+
+"""
+1. Tell python where to find the appropriate functions
+"""
 from nipype.interfaces.base import (
 	TraitedSpec,
 	CommandLineInputSpec,
@@ -13,19 +21,24 @@ from nipype.interfaces.base import (
 from nipype.utils.filemanip import split_filename
 import os
 
-# Create my own custom command line interface
-# new file name ends w/ "_eddy.nii"
+"""
+2. Please refer to instructions in README.md for detailed description of how to wrap a cmd line tool
+	_format_arg(): change output file name by changing the format of 'new_file' arg
+	Please ask Yizi if you have confusions about what this function does
+	_list_outputs(): aggregate output files to designated result folder so that it is 
+	not stored temporarily 
+"""
 class EddyInputSpec(CommandLineInputSpec):
-	input_file = File(desc='file to be eddy corrected', exists=True, 
+	input_file = File(desc='input file to be eddy corrected', exists=True, 
 			  mandatory=True, position=0, argstr="%s")
-	new_file = File(desc='new file name', argstr='%s', 
+	new_file = File(desc='output file name', argstr='%s', 
 		        name_source=['input_file'], 
 			name_template='%s_eddy.nii', position=1)
-	param = traits.Str(desc = 'Additional parameters to the command', position=2, argstr="%s")
+	param = traits.Str(desc = 'Additional parameter to the command', position=2, argstr="%s")
 
 
 class EddyOutputSpec(TraitedSpec):
-	output_file = File(desc='eddy corrected file', exists=True)
+	output_file = File(desc='output file after eddy correction', exists=True)
 
 
 class EddyTask(CommandLine):

@@ -1,53 +1,64 @@
+"""
+=============================================================
+Using nipype for creating a pipeline for DTI processing steps
+=============================================================  
+"""
 
-from nipype import config
+"""
+1. Tell python where to find the appropriate functions
+	eddy_node.py: a custom cmd line wrapper for eddy correction
+	topup_node.py: a custom cmd line wrapper for topup
+"""
+from nipype import config		
 config.enable_debug_mode()
 
 import os
-import eddy_node_copy as ed
-import topup_node as tp
-import dtifit_node as df
 from nipype import SelectFiles, Node, MapNode, Workflow
+import eddy_node as ed		
+import topup_node as tp
 
-# Set up working directory
-homeDir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/')
-requestedPath = os.path.join(homeDir, 'eddy')
-workingdir = os.path.realpath(requestedPath)
-if not os.path.exists(workingdir):
-        os.makedirs(workingdir)
+"""
+2. Set up image directory and working directory 
+"""
+workingdir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing')
+imagedir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/data')
 
-# Set up image directory
-imagedir = os.path.join(homeDir + '/' + 'data')
-
-# Create SelectFiles node
+"""
+3. Define data sources. Using SelectFiles interface to import images from image directory
+"""
 templates = {'input1':'ds_*/dti_*_dwi_FH_1shell_b1200.nii',
 	     'input2':'ds_*/dti_*_dwi_HF_1shell_b1200.nii'}
-sf = Node(SelectFiles(templates),
-          name='selectfiles', run_without_submitting=True)
-
-# Location of the dataset folder
+sf = Node(SelectFiles(templates), name='selectfiles', run_without_submitting=True)
 sf.inputs.base_directory = imagedir
 
-# Create EddyTask nodes
+"""
+4. Define eddy correction step
+"""
 eddy_in1 = MapNode(ed.EddyTask(param='0'), 
 	       name='eddy_input1', iterfield=['input_file'])
 eddy_in2 = MapNode(ed.EddyTask(param='0'), 
                name='eddy_input2', iterfield=['input_file'])  
 
-# Create TopupTask node that pairs up in_file1 and in_file2 to run
-topup = MapNode(tp.TopupTask(), name='topup_node', iterfield=['in_file1', 'in_file2'])   # FIX IT
+"""
+5. Define topup step
+"""
+topup = MapNode(tp.TopupTask(), name='topup_node', iterfield=['in_file1', 'in_file2'])   
 
-# Create DtifitTask node 
-dtifit = MapNode(df.DtifitTask(), name='dtifit_node', iterfield=['in_file'])
+"""
+6. Set up DTI workflow
+"""
+dtiwf = Workflow(name='dti_workflow', base_dir=workingdir) 
+dtiwf.connect(sf, 'input1', eddy_in1, 'input_file')
+dtiwf.connect(sf, 'input2', eddy_in2, 'input_file')
+dtiwf.connect(eddy_in1, 'output_file', topup, 'in_file1')
+dtiwf.connect(eddy_in2, 'output_file', topup, 'in_file2')
 
-# Set up workflow
-edwf = Workflow(name='my_workflow', base_dir=workingdir) 
+"""
+7. Run DTI workflow
+	write_graph(): generate workflow graph 
+	plugin options: 'SLURM' or 'SLURMGraph'
+"""
+dtiwf.write_graph(graph2use='exec', format='png', simple_form=False)
+dtiwf.run(plugin='SLURMGraph', plugin_args={'dont_resubmit_completed_jobs':True,'template':'/share/foxlab-backedup/necfdg/nipype_testing/yizi_submit.slurm'})
 
-# Connect nodes
-edwf.connect(sf, 'input1', eddy_in1, 'input_file')
-edwf.connect(sf, 'input2', eddy_in2, 'input_file')
-edwf.connect(eddy_in1, 'output_file', topup, 'in_file1')
-edwf.connect(eddy_in2, 'output_file', topup, 'in_file2')
-edwf.connect(topup, 'output_file', dtifit, 'in_file')
 
-#Run workflow
-edwf.run(plugin='SLURMGraph', plugin_args={'dont_resubmit_completed_jobs':True,'template':'/share/foxlab-backedup/necfdg/nipype_testing/yizi_submit.slurm'})
