@@ -9,16 +9,19 @@ Nipype Tutorial:
 How to Wrap a Cmd Line Tool Using Nipype:
 - https://nipype.readthedocs.io/en/latest/devel/cmd_interface_devel.html
 
-dti_wf.py: creating an overarching pipeline to connect steps in the DTI process 
-how_to_dti.txt: containing commands for DTI steps that need to be translated and wrapped up using Nipype
+==============================================================================================================
 
-eddy: 
+__dti_wf.py:__ creating an overarching pipeline to connect steps in the DTI process 
+
+__how_to_dti.txt:__ containing commands for DTI steps that need to be translated and wrapped up using Nipype
+
+__eddy folder:__ 
   - eddy_node.py: wrapping cmd line tool 'eddy_correct'
   
-topup:
+__topup folder:__
   - topup_node.py: wrapping cmd line tool 'topup'
   
-ants:
+__ants folder:__
   - ants_wf.py: creating registration template for T1 images using ANTS nipype interface
   - ANTSBuildTemplate.py: ANTS nipype interface
   
