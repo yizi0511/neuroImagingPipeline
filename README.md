@@ -1,5 +1,6 @@
 # neuroImagingPipeline
 
+Using nipype for creating a pipeline for DTI processing steps.
 
 Nipype Tutorial:
 - https://miykael.github.io/nipype_tutorial/ 
