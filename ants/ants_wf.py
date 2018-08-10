@@ -1,3 +1,11 @@
+from __future__ import print_function, unicode_literals
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
+
+from nipype import config
+config.enable_debug_mode()
+
 """
 ==================================================
 Using ANTS for creating a T1 registration template
@@ -28,14 +36,6 @@ Pathway for ANTSBuildTemplate.py:
 1. Tell python where to find the appropriate functions
 	ANTSBuildTemplate uses ANTS interface instead of the new Registration interface in nipype
 """
-from __future__ import print_function, unicode_literals
-from builtins import open
-from future import standard_library
-standard_library.install_aliases()
-
-from nipype import config
-config.enable_debug_mode()
-
 import os
 import nipype.interfaces.utility as util
 import nipype.interfaces.ants as ants
@@ -48,29 +48,29 @@ from nipype.workflows.smri.ants.ANTSBuildTemplate import ANTSTemplateBuildSingle
 	01_T1_half.nii.gz taken from ~/mri/*/T1_masked_LPI.nii.gz 
 """
 workingdir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/antsTest')
-imagedir = os.path.join('/share/foxlab-backedup/necfdg/nipype_testing/image')
+imagedir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/image')
 
 input_images = [
-    os.path.join(mydatadir, '01_T1_half.nii.gz'),
-    os.path.join(mydatadir, '02_T1_half.nii.gz'),
-    os.path.join(mydatadir, '03_T1_half.nii.gz'),
-    os.path.join(mydatadir, '04_T1_half.nii.gz'),
-    os.path.join(mydatadir, '05_T1_half.nii.gz'),
-    os.path.join(mydatadir, '06_T1_half.nii.gz'),
-    os.path.join(mydatadir, '07_T1_half.nii.gz'),
-    os.path.join(mydatadir, '08_T1_half.nii.gz'),
-    os.path.join(mydatadir, '09_T1_half.nii.gz'),
-    os.path.join(mydatadir, '10_T1_half.nii.gz'),
-    os.path.join(mydatadir, '11_T1_half.nii.gz'),
-    os.path.join(mydatadir, '12_T1_half.nii.gz'),
-    os.path.join(mydatadir, '13_T1_half.nii.gz'),
-    os.path.join(mydatadir, '14_T1_half.nii.gz'),
-    os.path.join(mydatadir, '15_T1_half.nii.gz'),
-    os.path.join(mydatadir, '16_T1_half.nii.gz'),
-    os.path.join(mydatadir, '17_T1_half.nii.gz'),
-    os.path.join(mydatadir, '18_T1_half.nii.gz'),
-    os.path.join(mydatadir, '19_T1_half.nii.gz'),
-    os.path.join(mydatadir, '20_T1_half.nii.gz')
+    os.path.join(imagedir, '01_T1_half.nii.gz'),
+    os.path.join(imagedir, '02_T1_half.nii.gz'),
+    os.path.join(imagedir, '03_T1_half.nii.gz'),
+    os.path.join(imagedir, '04_T1_half.nii.gz'),
+    os.path.join(imagedir, '05_T1_half.nii.gz'),
+    os.path.join(imagedir, '06_T1_half.nii.gz'),
+    os.path.join(imagedir, '07_T1_half.nii.gz'),
+    os.path.join(imagedir, '08_T1_half.nii.gz'),
+    os.path.join(imagedir, '09_T1_half.nii.gz'),
+    os.path.join(imagedir, '10_T1_half.nii.gz'),
+    os.path.join(imagedir, '11_T1_half.nii.gz'),
+    os.path.join(imagedir, '12_T1_half.nii.gz'),
+    os.path.join(imagedir, '13_T1_half.nii.gz'),
+    os.path.join(imagedir, '14_T1_half.nii.gz'),
+    os.path.join(imagedir, '15_T1_half.nii.gz'),
+    os.path.join(imagedir, '16_T1_half.nii.gz'),
+    os.path.join(imagedir, '17_T1_half.nii.gz'),
+    os.path.join(imagedir, '18_T1_half.nii.gz'),
+    os.path.join(imagedir, '19_T1_half.nii.gz'),
+    os.path.join(imagedir, '20_T1_half.nii.gz')
 ]
 
 """
@@ -85,7 +85,7 @@ tbuilder.base_dir = workingdir
 datasource = pe.Node(interface=util.IdentityInterface(fields=['imageList', 'initTemp']),
    		     run_without_submitting=True, name='inputT1Images')
 datasource.inputs.imageList = input_images
-datasource.inputs.initTemp = os.path.join(imagedir + '/NMT.nii.gz') 
+datasource.inputs.initTemp = os.path.join(imagedir, 'NMT.nii.gz') 
 datasource.inputs.sort_filelist = True
 
 """
