@@ -85,7 +85,7 @@ tbuilder.base_dir = workingdir
 datasource = pe.Node(interface=util.IdentityInterface(fields=['imageList', 'initTemp']),
    		     run_without_submitting=True, name='inputT1Images')
 datasource.inputs.imageList = input_images
-datasource.inputs.initTemp = os.path.join(imagedir + '/NMT.nii.gz') 
+datasource.inputs.initTemp = os.path.join(imagedir + 'NMT.nii.gz') 
 datasource.inputs.sort_filelist = True
 
 """
