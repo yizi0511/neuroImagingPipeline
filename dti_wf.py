@@ -16,6 +16,8 @@ import os
 from nipype import SelectFiles, Node, MapNode, Workflow
 import eddy_node as ed		
 import topup_node as tp
+import bet_node as bt
+import dtitf_node as tf
 
 """
 2. Set up image directory and working directory 
@@ -45,16 +47,30 @@ eddy_in2 = MapNode(ed.EddyTask(param='0'),
 topup = MapNode(tp.TopupTask(), name='topup_node', iterfield=['in_file1', 'in_file2'])   
 
 """
-6. Set up DTI workflow
+6. Define bet step
+"""
+bet = MapNode(bt.BetTask(param2='-f', param3='0.3', param4='-m', param5='-n'),
+	name='bet_node', iterfield=['in_file'])
+
+"""
+7. Define dtifit step 
+"""
+dtifit = MapNode(tf.DtitfTask(), name='dtifit_node', iterfield=['in_file', 'mask_file'])
+
+"""
+8. Set up DTI workflow
 """
 dtiwf = Workflow(name='dti_workflow', base_dir=workingdir) 
 dtiwf.connect(sf, 'input1', eddy_in1, 'input_file')
 dtiwf.connect(sf, 'input2', eddy_in2, 'input_file')
 dtiwf.connect(eddy_in1, 'output_file', topup, 'in_file1')
 dtiwf.connect(eddy_in2, 'output_file', topup, 'in_file2')
+dtiwf.connect(topup, 'output_file', bet, 'in_file')
+dtiwf.connect(topup, 'output_file', dtifit, 'in_file')
+dtiwf.connect(bet, 'output_file', dtifit, 'mask_file')
 
 """
-7. Run DTI workflow
+9. Run DTI workflow
 	write_graph(): generate workflow graph 
 	plugin options: 'SLURM' or 'SLURMGraph'
 """

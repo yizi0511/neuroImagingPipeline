@@ -12,8 +12,8 @@ Using ANTS for creating a T1 registration template
 ==================================================
 
 We will use ANTS based workflow to create a template out of multiple T1 volumes.
-We will use NMT.nii as the starting template.
-We will run 4 iterations of ANTS template builder workflow to average the T1 images. 
+We will use NMT_SS.nii as the starting template.
+We will run 4 iterations of ANTS template builder workflow to average the deformed T1 images. 
 The original ANTSTemplateBuildSingleIterationWF processes passive T1 images 
 but we will ignore this process for the sake of convenience.
 
@@ -30,11 +30,14 @@ cmd line command would be:
 
 Pathway for ANTSBuildTemplate.py:
 /share/foxlab-backedup/apps/conda/lib/python3.6/site-packages/nipype/workflows/smri/ants/ANTSBuildTemplate.py
+
+Before running this ANTS workflow, run preANTS.slurm on all subjects and use the deformed output images
+as the input inmages for this workflow. preANTS.slurm does linear transformations only on subject images, 
+which makes sure that the subject brain is in the center. 
 """
 
 """
 1. Tell python where to find the appropriate functions
-	ANTSBuildTemplate uses ANTS interface instead of the new Registration interface in nipype
 """
 import os
 import nipype.interfaces.utility as util
@@ -44,33 +47,33 @@ import nipype.pipeline.engine as pe
 from nipype.workflows.smri.ants.ANTSBuildTemplate import ANTSTemplateBuildSingleIterationWF
 
 """
-2. Set up image directory and working directory. Define input images
-	01_T1_half.nii.gz taken from ~/mri/*/T1_masked_LPI.nii.gz 
+2. Set up image directory and working directory. 
+   input_images: linear transformed T1 images from preANTS step
 """
 workingdir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/antsTest')
-imagedir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/image')
+imagedir = os.path.abspath('/share/foxlab-backedup/necfdg/nipype_testing/ants')
 
 input_images = [
-    os.path.join(imagedir, '01_T1_half.nii.gz'),
-    os.path.join(imagedir, '02_T1_half.nii.gz'),
-    os.path.join(imagedir, '03_T1_half.nii.gz'),
-    os.path.join(imagedir, '04_T1_half.nii.gz'),
-    os.path.join(imagedir, '05_T1_half.nii.gz'),
-    os.path.join(imagedir, '06_T1_half.nii.gz'),
-    os.path.join(imagedir, '07_T1_half.nii.gz'),
-    os.path.join(imagedir, '08_T1_half.nii.gz'),
-    os.path.join(imagedir, '09_T1_half.nii.gz'),
-    os.path.join(imagedir, '10_T1_half.nii.gz'),
-    os.path.join(imagedir, '11_T1_half.nii.gz'),
-    os.path.join(imagedir, '12_T1_half.nii.gz'),
-    os.path.join(imagedir, '13_T1_half.nii.gz'),
-    os.path.join(imagedir, '14_T1_half.nii.gz'),
-    os.path.join(imagedir, '15_T1_half.nii.gz'),
-    os.path.join(imagedir, '16_T1_half.nii.gz'),
-    os.path.join(imagedir, '17_T1_half.nii.gz'),
-    os.path.join(imagedir, '18_T1_half.nii.gz'),
-    os.path.join(imagedir, '19_T1_half.nii.gz'),
-    os.path.join(imagedir, '20_T1_half.nii.gz')
+    os.path.join(imagedir, '01_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '02_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '03_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '04_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '05_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '06_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '07_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '08_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '09_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '10_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '11_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '12_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '13_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '14_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '15_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '16_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '17_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '18_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '19_T1_half_wimt.nii.gz'),
+    os.path.join(imagedir, '20_T1_half_wimt.nii.gz')
 ]
 
 """
@@ -85,11 +88,7 @@ tbuilder.base_dir = workingdir
 datasource = pe.Node(interface=util.IdentityInterface(fields=['imageList', 'initTemp']),
    		     run_without_submitting=True, name='inputT1Images')
 datasource.inputs.imageList = input_images
-<<<<<<< HEAD
-datasource.inputs.initTemp = os.path.join(imagedir, 'NMT.nii.gz') 
-=======
-datasource.inputs.initTemp = os.path.join(imagedir + 'NMT.nii.gz') 
->>>>>>> 4215c2ef27186d8a91c97c445e47fde358c6518d
+datasource.inputs.initTemp = os.path.join(imagedir, 'NMT_SS.nii.gz') 
 datasource.inputs.sort_filelist = True
 
 """
