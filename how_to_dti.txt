@@ -1,0 +1,107 @@
+
+ls /share/foxlab-backedup/necfdg/mri/*/dti*nii | awk -F\. '{print "eddy_correct "$0" "$1"_eddy.nii 0" }' > dti_eddycorrect_cmds.txt
+
+sbatch run_batch_dti_eddy.slurm
+
+
+
+# cmd below
+
+ls /share/foxlab-backedup/necfdg/mri/*/dti*_eddy_topup.nii.gz | awk -F\. '{print "bet "$0" "$1"_strip -f 0.3 -m -n" }' > dti_bet_cmds.txt
+
+sbatch run_batch_dti_bet.slurm
+
+# cmd below
+
+ls /share/foxlab-backedup/necfdg/mri/*/*FH_1shell_b1200_eddy.nii.gz > dti_first_dwi_filelist.txt
+ls /share/foxlab-backedup/necfdg/mri/*/*HF_1shell_b1200_eddy.nii.gz > dti_second_dwi_filelist.txt
+paste dti_first_dwi_filelist.txt dti_second_dwi_filelist.txt > dti_dwi_filelist.txt
+more dti_dwi_filelist.txt | awk -F'[\.\t]' '{print "./create_dti_topup.sh "$1".nii.gz "$4".nii.gz "$1"_topup.nii" }' > dti_topup_cmds.txt
+
+sbatch run_batch_dti_topup.slurm
+
+
+
+#how to make a scheme file
+   module load java/jdk1.8.0_05
+   # fsl2scheme -bvecfile bvecs -bvalfile bvals > necfdg_schemefile.scheme
+   ## ERROR _--fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt -usegradmod > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt -flipx -flipy -usegradmod > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt -flipy -usegradmod > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt -flipx -usegradmod > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin.txt -bvalfile dti_bval_su_costin.txt -flipx -flipy > necfdg_schemefile.scheme
+   # fsl2scheme -bvecfile dti_bvec_su_costin_swapYZ.txt -bvalfile dti_bval_su_costin.txt -flipx -flipy -usegradmod > necfdg_schemefile.scheme
+   ### DO SAYS THIS WORKS!
+   fsl2scheme -bvecfile dti_bvec_su_costin_swapYZ.txt -bvalfile dti_bval_su_costin.txt -flipy -flipz > necfdg_schemefile.scheme
+
+
+#cmd below
+
+ls /share/foxlab-backedup/necfdg/mri/*/dti*_eddy_topup.nii.gz | awk -F\. '{print "./lil_dtifit.sh "$0" "$1"_" }' > dti_tf_cmds.txt
+sbatch run_batch_dti_tf.slurm
+
+
+# TEMPORARY FIX NOW THAT TENSORS ARE FIXED, BUT BROKEN ARE STILL NORMALIZING
+ls /share/foxlab-backedup/necfdg/mri/*/dti*_dt.nii | awk -F\/ '{print "cp "$0" /share/foxlab-backedup/necfdg/dti_processed/"$6"_dt.nii" }'
+ls /share/foxlab-backedup/necfdg/dti_processed/*_dt.nii | awk '{print "./lil_standardization.sh nhp "$0 }' > dti_std_cmds.txt
+sbatch run_batch_dti_standardize.slurm
+## END TEMPORARY FIX
+
+# standardize cmd below... 
+ls /share/foxlab-backedup/necfdg/mri/*/dti*_dt.nii | awk '{print "./lil_standardization.sh nhp "$0 }' > dti_std_cmds.txt
+sbatch run_batch_dti_standardize.slurm
+
+
+# tractography...
+ls /share/foxlab-backedup/necfdg/mri/*/dti*_sdt_LPI.nii.gz |  awk '{print "./lil_tractography.sh 0.1 90 "$0 }'
+
+#cmd below normalization
+
+ls /share/foxlab-backedup/necfdg/mri/ds*/dti*_sdt.nii | awk -F \/ '{print "cp "$0" /share/foxlab-backedup/necfdg/mri/dti/norm/"$6"_sdt.nii" }'
+
+
+### These are the files that you should be making scalar maps of... 
+### ls ../mri/ds*/dti*diffeo.nii.gz
+
+# cmd below -fa
+ls /share/foxlab-backedup/necfdg/mri/ds*/dti*_dt.nii | awk -F\. '{print "TVtool -in "$0" -fa -out "$1"_fa.nii.gz"}' > dt_fa_cmds.txt
+
+sbatch run_batch_dt_fa.slurm
+
+#cmds below for scalars
+
+ls /share/foxlab-backedup/necfdg/mri/ds*/dti*diffeo.nii.gz | awk '{print "./lil_scalars.sh "$0}' > dt_scalars_cmds.txt
+
+sbatch run_batch_dt_scalars_cmds.txt
+
+ls /share/foxlab-backedup/necfdg/dti_processed/*diffeo.nii.gz | awk '{print "./lil_scalars.sh "$0}' > dt_scalars_cmds_processed.txt
+
+sbatch run_batch_dt_scalars_cmds_processed.txt
+
+
+ls ../mri/*/*sagT1*/0001.dcm | awk -F\/ '{print $3 }' > dti_folder_name.txt
+ls ../mri/*/*sagT1*/0001.dcm | awk '{print "mri_probedicom --i "$0 }' | bash | grep PatientName > pet_patient_names.txt
+paste dti_folder_name.txt pet_patient_names.txt > dti_pet_match.txt
+
+
+#cmd below for fs merge
+
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_fa /share/foxlab-backedup/necfdg/mri/*/dti*_fa4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_ad /share/foxlab-backedup/necfdg/mri/*/dti*_ad4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_rd /share/foxlab-backedup/necfdg/mri/*/dti*_rd4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_tr /share/foxlab-backedup/necfdg/mri/*/dti*_tr4mm.nii.gz
+
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_fa /share/foxlab-backedup/necfdg/dti_processed/*_fa4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_ad /share/foxlab-backedup/necfdg/dti_processed/*_ad4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_rd /share/foxlab-backedup/necfdg/dti_processed/*_rd4mm.nii.gz
+srun -t 4:00:00 -n 1 --mem 5000 fslmerge -t necfdg_dti_tr /share/foxlab-backedup/necfdg/dti_processed/*_tr4mm.nii.gz
+
+
+#cmd below for fslrandomise
+  ## output file name can be renamed
+  ## mask file (-m) should be renamed as well	
+randomise -i necfdg_dti_fa.nii.gz -o randomise_out -d age_design_matrix.mat -t age_contrast_matrix.con -m necfdg_mask.nii.gz -T
+
+
+
