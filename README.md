@@ -19,7 +19,14 @@ __eddy folder:__
   - __eddy_node.py:__ wrapping cmd line tool 'eddy_correct'
   
 __topup folder:__
-  - __topup_node.py:__ wrapping cmd line tool 'topup'
+  - __topup_node.py:__ wrapping cmd line executable 'create_dti_topup.sh'
+  - __create_dti_topup.sh:__ cmd line executable that runs 'topup' on subjects
+  - __dti_topup_params.txt:__ file needed by create_dti_topup.sh
+  
+__dtitf folder:__
+  - __dtitf_node.py:__ wrapping cmd line executable 'lil_dtifit.sh'
+  - __lil_dtifit.sh:__ cmd line executable that runs DTIFIT on subjects
+  - __necfdg_schemefile.scheme:__ file needed by lil_dtifit.sh
   
 __ants folder:__
   - __ants_wf.py:__ creating registration template for T1 images using ANTS nipype interface
