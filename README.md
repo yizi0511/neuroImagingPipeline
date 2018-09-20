@@ -31,4 +31,9 @@ __dtitf folder:__
 __ants folder:__
   - __ants_wf.py:__ creating registration template for T1 images using ANTS nipype interface
   - __ANTSBuildTemplate.py:__ ANTS nipype interface
+  - __preANTS_cmd.slurm:__ bash cmd that runs linear transform only on subjects (do this before running ANTS workflow) 
+  - __JacobianDeform.slurm:__ bash cmd that finds Jacobian deformation field of the images (do this after running ANTS)
+  - __smoothing.slurm:__ bash cmd that smoothes the Jacobian deformation field images
+  - __NMT_SS.nii.gz:__ initial template for ANTS workflow (stripped skull)
+  - __ANTSwfinfo.txt:__ contains important info about subject ID 
   
